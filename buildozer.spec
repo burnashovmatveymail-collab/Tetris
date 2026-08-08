@@ -1,14 +1,35 @@
-[app]
-title = Tetris
-package.name = tetris
-package.domain = org.myapp
-source.dir = .
-source.include_exts = py,png,jpg,mp3,wav
-version = 0.1
-requirements = python3,kivy
-orientation = portrait
-osx.kivy_version = 2.3.1
+name: Build Android APK
 
-[buildozer]
-log_level = 2
-warn_on_root = 1
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+        pip install --upgrade pip
+        pip install buildozer cython==0.29.33 kivy
+
+    - name: Build with Buildozer
+      run: |
+        buildozer -v android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: tetris-apk
+        path: bin/*.apk
